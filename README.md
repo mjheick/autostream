@@ -23,3 +23,7 @@ Live HLS:
 
 Play in VLC / ffplay
 - ffplay http://localhost:8888/master.m3u8
+
+# Dependencies
+- https://github.com/videojs/video.js
+- https://getbootstrap.com/docs/5.3/getting-started/introduction/
