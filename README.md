@@ -6,8 +6,10 @@ A node.js service that helps stream video by converting in real time
 - ffmpeg >= 4.4
 
 # Installation
+```
 npm init -y
 npm install express lru-cache
+```
 
 # Capabilities
 ABR (Adaptive Bitrate):
