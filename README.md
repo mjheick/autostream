@@ -7,8 +7,7 @@ A node.js service that helps stream video by converting in real time
 
 # Installation
 ```
-npm init -y
-npm install express lru-cache
+npm install
 ```
 
 # Capabilities

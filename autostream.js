@@ -142,5 +142,5 @@ app.get("/segment/:source/:index.ts", async (req, res) => {
  * ---------------- Start Server ----------------
  */
 app.listen(PORT, () => {
-  console.log(`autostream service running on http://localhost:${PORT}`);
+  console.log(`autostream service running on port ${PORT}`);
 });
