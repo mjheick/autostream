@@ -1,0 +1,24 @@
+{
+  "name": "autostream",
+  "version": "1.0.0",
+  "description": "A node.js service that helps stream video by converting in real time",
+  "main": "autostream.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rm -rf node_modules && rm package-lock.json && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mjheick/autostream.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mjheick/autostream/issues"
+  },
+  "homepage": "https://github.com/mjheick/autostream#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
