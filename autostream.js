@@ -3,22 +3,24 @@ import { execFile } from "child_process";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import LRU from "lru-cache";
 
+/**
+ * ---------------- Constants ----------------
+ */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const app = express();
 const PORT = 8888;
-
+const VIDEO_BASEPATH = './';
 const VIDEO_DIR = path.join(__dirname, "videos");
 const SEGMENT_DIR = path.join(__dirname, "segments");
 const SEGMENT_DURATION = 5;
-const LIVE_WINDOW = 6; // segments kept for live playlists
 
 fs.mkdirSync(SEGMENT_DIR, { recursive: true });
 
-/* ---------------- Utilities ---------------- */
+/**
+ * ---------------- Utilities ----------------
+ */
 
 function run(cmd, args) {
   return new Promise((resolve, reject) => {
@@ -39,15 +41,6 @@ async function getDuration(videoPath) {
   return parseFloat(out.trim());
 }
 
-/* ---------------- LRU Cache ---------------- */
-
-const segmentCache = new LRU({
-  max: 200,
-  dispose: (value) => {
-    if (fs.existsSync(value)) fs.unlinkSync(value);
-  }
-});
-
 /* ---------------- ABR Master Playlist ---------------- */
 
 app.get("/master.m3u8", (req, res) => {
@@ -66,11 +59,11 @@ app.get("/master.m3u8", (req, res) => {
   res.send(master.join("\n"));
 });
 
-/* ---------------- Media Playlist ---------------- */
-
+/**
+ * ---------------- Media Playlist ----------------
+ */
 app.get("/playlist.m3u8", async (req, res) => {
   const source = req.query.source || "sample";
-  const live = req.query.live === "1";
 
   const videoPath = path.join(VIDEO_DIR, `${source}.mp4`);
   if (!fs.existsSync(videoPath)) {
@@ -83,11 +76,6 @@ app.get("/playlist.m3u8", async (req, res) => {
   let start = 0;
   let end = totalSegments;
 
-  if (live) {
-    end = Math.floor(Date.now() / 1000 / SEGMENT_DURATION);
-    start = Math.max(0, end - LIVE_WINDOW);
-  }
-
   const lines = [
     "#EXTM3U",
     "#EXT-X-VERSION:3",
@@ -99,15 +87,15 @@ app.get("/playlist.m3u8", async (req, res) => {
     lines.push(`#EXTINF:${SEGMENT_DURATION.toFixed(3)},`);
     lines.push(`/segment/${source}/${i}.ts`);
   }
-
-  if (!live) lines.push("#EXT-X-ENDLIST");
+  lines.push("#EXT-X-ENDLIST");
 
   res.type("application/vnd.apple.mpegurl");
   res.send(lines.join("\n"));
 });
 
-/* ---------------- Segment Endpoint ---------------- */
-
+/**
+ * ---------------- Segment Endpoint ----------------
+ */
 app.get("/segment/:source/:index.ts", async (req, res) => {
   const { source, index } = req.params;
   const segIndex = parseInt(index, 10);
@@ -141,7 +129,6 @@ app.get("/segment/:source/:index.ts", async (req, res) => {
         segPath
       ]);
 
-      segmentCache.set(`${source}_${segIndex}`, segPath);
     }
 
     res.type("video/MP2T");
@@ -151,8 +138,9 @@ app.get("/segment/:source/:index.ts", async (req, res) => {
   }
 });
 
-/* ---------------- Start Server ---------------- */
-
+/**
+ * ---------------- Start Server ----------------
+ */
 app.listen(PORT, () => {
-  console.log(`HLS service running on http://localhost:${PORT}`);
+  console.log(`autostream service running on http://localhost:${PORT}`);
 });
