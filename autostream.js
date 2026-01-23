@@ -11,11 +11,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 8888;
-const VIDEO_BASEPATH = './';
-const VIDEO_DIR = path.join(__dirname, "videos");
+const FFMPEG_EXEC = '/usr/bin/ffmpeg';
+const FFPROBE_EXEC = '/usr/bin/ffprobe';
+const VIDEO_BASEPATH = '/home/heick/Desktop/repos/autostream/videos';
 const SEGMENT_DIR = path.join(__dirname, "segments");
 const SEGMENT_DURATION = 5;
 
+/**
+ * Where we're gonna make TS files
+ */
 fs.mkdirSync(SEGMENT_DIR, { recursive: true });
 
 /**
@@ -32,7 +36,7 @@ function run(cmd, args) {
 }
 
 async function getDuration(videoPath) {
-  const out = await run("ffprobe", [
+  const out = await run(FFPROBE_EXEC, [
     "-v", "error",
     "-show_entries", "format=duration",
     "-of", "default=noprint_wrappers=1:nokey=1",
@@ -41,31 +45,14 @@ async function getDuration(videoPath) {
   return parseFloat(out.trim());
 }
 
-/* ---------------- ABR Master Playlist ---------------- */
-
-app.get("/master.m3u8", (req, res) => {
-  const source = req.query.source || "sample";
-
-  const master = [
-    "#EXTM3U",
-    "#EXT-X-VERSION:3",
-    "#EXT-X-STREAM-INF:BANDWIDTH=500000,RESOLUTION=854x480",
-    `/playlist.m3u8?source=${source}_480`,
-    "#EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=1280x720",
-    `/playlist.m3u8?source=${source}_720`
-  ];
-
-  res.type("application/vnd.apple.mpegurl");
-  res.send(master.join("\n"));
-});
-
 /**
  * ---------------- Media Playlist ----------------
  */
-app.get("/playlist.m3u8", async (req, res) => {
-  const source = req.query.source || "sample";
+app.get("/:source/playlist.m3u8", async (req, res) => {
+  const { source } = req.params;
+  console.log(`GET /${source}/playlist.m3u8`);
 
-  const videoPath = path.join(VIDEO_DIR, `${source}.mp4`);
+  const videoPath = path.join(VIDEO_BASEPATH, `${source}`);
   if (!fs.existsSync(videoPath)) {
     return res.status(404).send("Video not found");
   }
@@ -89,6 +76,7 @@ app.get("/playlist.m3u8", async (req, res) => {
   }
   lines.push("#EXT-X-ENDLIST");
 
+  res.set('Access-Control-Allow-Origin', '*');
   res.type("application/vnd.apple.mpegurl");
   res.send(lines.join("\n"));
 });
@@ -98,13 +86,14 @@ app.get("/playlist.m3u8", async (req, res) => {
  */
 app.get("/segment/:source/:index.ts", async (req, res) => {
   const { source, index } = req.params;
+  console.log(`GET /segment/${source}/${index}.ts`);
   const segIndex = parseInt(index, 10);
 
   if (Number.isNaN(segIndex) || segIndex < 0) {
     return res.sendStatus(404);
   }
 
-  const videoPath = path.join(VIDEO_DIR, `${source}.mp4`);
+  const videoPath = path.join(VIDEO_BASEPATH, `${source}`);
   if (!fs.existsSync(videoPath)) {
     return res.sendStatus(404);
   }
@@ -116,7 +105,7 @@ app.get("/segment/:source/:index.ts", async (req, res) => {
 
   try {
     if (!fs.existsSync(segPath)) {
-      await run("ffmpeg", [
+      await run(FFMPEG_EXEC, [
         "-y",
         "-ss", String(segIndex * SEGMENT_DURATION),
         "-i", videoPath,
@@ -131,6 +120,7 @@ app.get("/segment/:source/:index.ts", async (req, res) => {
 
     }
 
+    res.set('Access-Control-Allow-Origin', '*');
     res.type("video/MP2T");
     res.sendFile(segPath);
   } catch (err) {
