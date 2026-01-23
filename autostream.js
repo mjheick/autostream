@@ -25,9 +25,9 @@ fs.mkdirSync(SEGMENT_DIR, { recursive: true });
 /**
  * ---------------- Utilities ----------------
  */
-
 function run(cmd, args) {
   return new Promise((resolve, reject) => {
+    console.log(`exec ${cmd} ` + args.join(' '));
     execFile(cmd, args, { encoding: "utf8" }, (err, stdout, stderr) => {
       if (err) reject(stderr || err.message);
       else resolve(stdout);
