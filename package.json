@@ -1,5 +1,6 @@
 {
   "name": "autostream",
+  "type": "module",
   "version": "1.0.0",
   "description": "A node.js service that helps stream video by converting in real time",
   "main": "autostream.js",
