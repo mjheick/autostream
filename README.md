@@ -5,9 +5,10 @@ A node.js service that helps stream video by converting in real time
 - node >= 18
 - ffmpeg >= 4.4
 
-# Installation
+# Setup
 ```
 npm install
+node .
 ```
 
 # Capabilities
@@ -26,3 +27,6 @@ Play in VLC / ffplay
 # Dependencies
 - https://github.com/videojs/video.js
 - https://getbootstrap.com/docs/5.3/getting-started/introduction/
+
+# Cool things
+- https://download.blender.org/peach/bigbuckbunny_movies/
