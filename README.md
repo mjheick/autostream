@@ -11,18 +11,24 @@ npm install
 node .
 ```
 
-# Capabilities
-ABR (Adaptive Bitrate):
-- http://localhost:8888/master.m3u8
+# Endpoints
 
-VOD Playlist:
-- http://localhost:8888/playlist.m3u8?source=sample_720
+A List of supported endpoints this service exposes
 
-Live HLS:
-- http://localhost:8888/playlist.m3u8?source=sample_720&live=1
+## /filename/playlist.m3u8
 
-Play in VLC / ffplay
-- ffplay http://localhost:8888/master.m3u8
+This provides a m3u8 playlist to stream AV content.
+
+filename is an actual file present in VIDEO_BASEPATH.
+
+## /segments/filename/x.ts
+
+This is the endpoints defined in playlist.m3u8 that deliver mpegts videos.
+
+Segments are created from the video referenced and stored in SEGMENT_DIR.
+
+# Stuff
+sample.html shows a fully working example using video.js and bootstrap 5
 
 # Dependencies
 - https://github.com/videojs/video.js
