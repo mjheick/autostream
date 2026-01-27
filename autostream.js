@@ -13,7 +13,7 @@ const app = express();
 const PORT = 8888;
 const FFMPEG_EXEC = '/usr/bin/ffmpeg';
 const FFPROBE_EXEC = '/usr/bin/ffprobe';
-const VIDEO_BASEPATH = '/home/heick/Desktop/repos/autostream/videos';
+const VIDEO_BASEPATH = '/home/matt/repos/autostream/videos';
 const SEGMENT_DIR = path.join(__dirname, "segments");
 const SEGMENT_DURATION = 5;
 
@@ -103,24 +103,29 @@ app.get("/segment/:source/:index.ts", async (req, res) => {
     `${source}_${segIndex}.ts`
   );
 
+  var elapsed = '';
   try {
     if (!fs.existsSync(segPath)) {
+      var proc_timer = process.hrtime();
       await run(FFMPEG_EXEC, [
         "-y",
         "-ss", String(segIndex * SEGMENT_DURATION),
-        "-i", videoPath,
         "-t", String(SEGMENT_DURATION),
+        "-i", videoPath,
         "-copyts",
-        "-avoid_negative_ts", "make_zero",
         "-c", "copy",
         "-force_key_frames", `expr:gte(t,n_forced*${SEGMENT_DURATION})`,
         "-f", "mpegts",
         segPath
       ]);
-
+      var proc_elapsed = process.hrtime(proc_timer);
+      elapsed = proc_elapsed[0] + '.' + proc_elapsed[1];
+    } else {
+      elapsed = 'cached';
     }
 
     res.set('Access-Control-Allow-Origin', '*');
+    res.set('X-Time', elapsed.toString());
     res.type("video/MP2T");
     res.sendFile(segPath);
   } catch (err) {
